@@ -1,0 +1,432 @@
+---
+title: "Exploring the BRFSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+#install.packages("forcats")
+
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(gridExtra)
+library(forcats)
+```
+
+### Load data
+
+ 
+```{r load-data}
+load("brfss2013.RData")
+dim(brfss2013)
+```
+
+
+
+* * *
+
+## Part 1: Data
+The data for the project was collected by The Behavioral Risk Factor Surveillance System, the project collects data relative to some health practices and risk behaviors that are linked to chronic diseases, injuries, and preventable infectious diseases that affect the adult (aged 18 yers and more), non-institutionalized (people that were not at a hostpital at the time of the interview) population, the data was collected by two main types of interviews: landline and cellular telephone, for the landline iterview it selects a random adult from the houshold.
+
+the information on the site of the project does not specify how a non response to interview is treated, also since this is a phone interview it is subject ot multiple errors:
+
+* wheather or not the respondant is telling the truth, especially, and wheather or not he recalls facts about his health problems and behaviours.
+* the exact phrasing of the question might affect the response in a certain way.
+* entry errors by the person asking the questions.
+
+Considering all this factors, and given that the BRFSS has the resources needed to eleminat a lot of errors we can draw the following conclusion:
+
+* The study relies on random sampling, the exact method used is Random Digit Dialing as it says on the BRFSS FAQ page: https://www.cdc.gov/brfss/about/brfss_faq.htm,
+so we can generalize the results to: adult (aged 18 or plus) non-instutionalized US residents.
+
+* There is no random assignement so this is an observational study, so: we can only infer ASSOCIATION and NOT CAUSATION.
+
+* * *
+
+## Part 2: Research questions
+
+As a college student, in my analysis I will try to explore the associations that exist between some of the thing I care about like some life habits (exercise, diet and sleep) and how they relate to some helth problems (overweight, blood presure and diabities) also one of the most important issues is how can education level be associated with income level.
+
+**Research quesion 1:**
+Some studies suggest that exercise and healty food consumption(espeacially fruit and vegetables) help to prevent overweight, how can we describe the associations between physical activity and overweight, and between healty food consumption and overweight?
+
+**Research quesion 2:**
+Sleep is essential to humans, and most studies say that 7 to 9 hours is the correct amount of sleep that every one should get. It is common to link sleep deprivation to some health problems such an increasing risk of diabities and high blood presure, so is there any association between sleep deprivation (less than 7h) and high blood presure and also diabities?
+
+**Research quesion 3:**
+How does education level associate with income level?
+
+
+
+
+
+
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+In this part we will use a bunch of variables to verify if the associations suggested in the research questions hold.
+
+**Research quesion 1:**
+
+Let us start by exploring two variables we will use in the analysis in the first question,  "Physical Activity Categories" (X_pacat1) and Computed Body Mass Index Categories (X_bmi5cat) both of them are categorical variables.
+
+```{r}
+brfss2013 %>%
+  select(X_pacat1, X_bmi5cat) %>%
+  na.omit() -> 
+  weight_by_activity
+
+  names(weight_by_activity) <- c("activity_category", "weight_category") 
+  
+  activity_plot <- 
+  ggplot(weight_by_activity, aes(x = `activity_category`)) +
+        geom_bar(aes(y =  (..count..)/sum(..count..)), fill='cyan3') +
+        theme_linedraw() +
+        theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+        labs(x = "Physical Activity Categories", y = "Proportion")
+  
+  body_mass_index_plot <- 
+  ggplot(weight_by_activity, aes(x = `weight_category`)) +
+        geom_bar(aes(y =  (..count..)/sum(..count..)),  fill='lightcoral') +
+        theme_linedraw() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+        labs(x = "Computed Body Mass Index Categories", y = "Proportion")
+        
+  
+  weight_activity_plot <- 
+  grid.arrange(activity_plot, body_mass_index_plot, ncol=2) 
+
+  
+```
+
+We can see that the Physical Activity Categories can take one of 4 values: Highly active, Active, Insufficiently active and Inactive.
+The most common category among observations is Highly active, followed by Inactive then Insufficiently active and for the last category Active.
+Computed Body Mass Index Categories takes 4 values Underweight, Normal weight, Overweight and Obese.
+most observations fall under Overweight followed by Normal weight then Obese and for the last category Underweight.
+
+
+Now we will prepare the data to plot the variables in respect to each other, let us start by preparing the data:
+lets group the data by the activity_category and  then by weight_category and take the counts under each category and sub-category, we will achieve that using the folowing chunk of code:
+
+```{r}
+  weight_by_activity %>%
+  group_by(activity_category, weight_category ) %>%
+  summarise(activity_counts = length(activity_category), weight_counts = length(weight_category)) %>%
+  group_by(activity_category) %>%
+  mutate(activity_counts = sum(weight_counts)) %>%
+  ungroup() ->
+  weight_by_activity_type_data
+```
+
+we will take the proportion of each sub-category in respect ot each parent category using this command:
+
+```{r}
+weight_by_activity_type_data$weight_activity_ratio <-
+  round(weight_by_activity_type_data$weight_counts /  weight_by_activity_type_data$activity_counts, 3)
+
+```
+
+lets plot the results:
+
+```{r, out.width='\\textwidth', fig.height = 4, fig.align='center'}
+plot_weight_activity <- 
+  qplot(x = activity_category,
+      y = weight_activity_ratio,
+      fill = weight_category,
+      data = weight_by_activity_type_data,
+      geom = 'col') +
+  scale_fill_brewer(palette = 'Set1') +
+  theme_linedraw() 
+  
+  print(plot_weight_activity)
+
+```
+
+As we can see in this plot the physical activity is associated with the weight category, since the obesity rates increase when the physical activity decreases, and the normal weight proportion drops with the drop of physical activity, this proves association between the two variables Physical Activity Categories and Computed Body Mass Index Categories but we can't conclude causation since this is an observational study.
+
+
+
+Now we will see how both fruit and vegetable cosumption affect the BMI(body mass index), we will add some new variables to analysis, we are talking here about:
+X_bmi5: Computed Body Mass Index this is a numerical continous variable
+X_vegesum: Total Vegetables Consumed Per Day this is a numerical continous variable
+X_frutsum: Total Fruits Consumed Per Day this is a numerical continous variable
+
+we will also keep the other variables: X_pacat1, X_bmi5cat so we can later combine the result and see how the combination of varibles related to healty food and physical activity affect boody weight, we will start by extracting the relevent variables and applyig some transformation and calculating some new variables:
+```{r}
+  brfss2013 %>%
+  select(X_frutsum, X_vegesum, X_pacat1, X_bmi5, X_bmi5cat) %>%
+  na.omit() ->
+  weight_by_healthy_food_and_activity
+
+  weight_by_healthy_food_and_activity$frut_veg_sum <- weight_by_healthy_food_and_activity$X_frutsum + weight_by_healthy_food_and_activity$X_vegesum
+  
+  
+  
+  
+  weight_by_healthy_food_and_activity %>%
+  select(frut_veg_sum, X_pacat1, X_bmi5, X_bmi5cat) ->
+  weight_by_healthy_food_and_activity
+  
+  
+  weight_by_healthy_food_and_activity$X_bmi5 <- weight_by_healthy_food_and_activity$X_bmi5/100
+  
+  weight_by_healthy_food_and_activity$frut_veg_sum <-  weight_by_healthy_food_and_activity$frut_veg_sum/100
+  
+  names(weight_by_healthy_food_and_activity) <- c("total_frut_veg_cons", "actv_category", "BMI", "weight_category")
+
+```
+
+a quick look at the summary statistics for both variables:
+
+```{r}
+weight_by_healthy_food_and_activity %>%
+  select(total_frut_veg_cons, BMI) %>%
+  summarize_all(funs(mean, sd)) ->
+  weight_by_healthy_food_and_activity_summary
+
+
+weight_by_healthy_food_and_activity %>%
+  select(total_frut_veg_cons, BMI) %>%
+  summarize_all(funs(median, IQR)) ->
+  weight_by_healthy_food_and_activity_robust_summary
+  
+
+ 
+  kable(weight_by_healthy_food_and_activity_summary)
+  kable(weight_by_healthy_food_and_activity_robust_summary)
+  
+```
+
+
+
+
+Lets take a look at the distribution of the variables:
+
+```{r}
+
+evalutate_bmi_and_frut_veg_distributions <- function(weight_by_healthy_food_and_activity_data) {
+
+  BMI_hsitogram <-
+    ggplot(data = weight_by_healthy_food_and_activity_data) +
+      geom_histogram(aes(x = BMI),
+                     bins = 50,
+                     fill='cyan3') +
+    theme_linedraw()
+  frut_veg_consum_histogram <-
+    ggplot(data = weight_by_healthy_food_and_activity_data) +
+      geom_histogram(aes(x = total_frut_veg_cons),
+                     bins = 50,
+                     fill='cyan3') +
+    theme_linedraw()
+  
+  data_dist_histogam_plots <- 
+    grid.arrange(BMI_hsitogram, frut_veg_consum_histogram, ncol=2) 
+  
+  print(data_dist_histogam_plots)
+}
+
+evalutate_bmi_and_frut_veg_distributions(weight_by_healthy_food_and_activity)
+
+```
+
+
+we can see that both distributions are right skewed, but that the distribution of total fruit and vegetable consumption is more skewed than the BMI distribution.
+
+   
+
+
+We will plot the BMI against the fruit and vegetable consumption, to see if there is any prominent relationship between the two variables.   
+
+```{r, out.width='\\textwidth', fig.height = 5, fig.align='center'}
+
+ ggplot(data=weight_by_healthy_food_and_activity, aes(x=total_frut_veg_cons, y=BMI)) + 
+  geom_point(aes(color=weight_category)) + 
+  theme_linedraw()
+
+```
+
+we can see that as the consumption of vegeatbles and fruits increases the number of observations that exhibit obesity and underweight decreases and the BMI tends to go in the direction of a healthy BMI, but other than this somewhat unstable association we can't conclude anything else about the association, so we will try to understand how both variables:
+fruit/vegetable consumption and physical activity affect the BMI and BMI category.
+
+so let us create a plot that the 4 variables:
+
+
+```{r}
+ggplot(data=weight_by_healthy_food_and_activity, aes(x=total_frut_veg_cons, y=BMI)) + 
+  geom_point(aes(color=weight_category)) +
+  scale_shape_identity() +
+  theme_linedraw() +
+  facet_wrap(~actv_category)
+```
+
+It is clear that for all people who are at least Insufficiently active, as the fruit and vegetable consumption increase the BMI tends to go towrds the interval $[18.5 \ ; \ 25]$ which is the normal weight interval, and also that the observations that show obesity and overweight tends to shrink with the increase of vegetable and fruit consumption.
+In the other hand for people who are Inactive eventhough the increase of healty food (veg and fruit) tends to make the BMI go twords the normal weight interval some ovservations still exhibit obesity and overweight for high levels of healty food consumption.
+
+
+
+conclusion:
+
+To answer the First question we can safly say that there is a strong association between physical activity and body weight on one hand, also there is a somewhat weak association between healthy food cosumption and body weight.
+But the strongest association is between (physical activity + healthy food consumption) and body weight.
+We can't infer any causal connection since this is not an experiment and there is no control and treatment groups.
+
+**Research quesion 2:**
+
+Now we will if sleep is associated to heart attack and high blood pressure, we will use the following variables:
+sleptim1: How Much Time Do You Sleep, this is a numerical continous variable that indicates the average amount of time a person get in a 24h time periode.
+cvdinfr4: Ever Diagnosed With Heart Attack, this is a categorical variable that idicates whether or not a person has ever been diagnosed with heart attack.
+X_rfhype5: High Blood Pressure Calculated Variable, this is a categorical variable that indicates if the person has ever been told he has high blood pressure by any health professional.
+
+we will calculate a new variable sleep_condition, that will contain sleep deprived if sleptim1 is less than 7 hours and normal otherwise normal.
+
+
+```{r}
+
+ brfss2013 %>%
+  select(sleptim1, cvdinfr4, X_rfhype5) %>%
+  na.omit() %>%
+  mutate(sleep_condition = ifelse(sleptim1 < 7, "sleep deprived", "normal")) %>% 
+  select(sleep_condition, cvdinfr4, X_rfhype5)->
+  heart_attack_blood_pressure_by_sleep
+
+
+  names(heart_attack_blood_pressure_by_sleep) <- c("sleep_condition", "heart_attack", "high_blood_pressure")
+  
+  heart_attack_blood_pressure_by_sleep$high_blood_pressure <- fct_rev(heart_attack_blood_pressure_by_sleep$high_blood_pressure)
+  
+  kable(head(heart_attack_blood_pressure_by_sleep))
+```
+
+we will explore the partitions of the categories of all the 3 variables:
+
+
+```{r}
+sleep_condition_plot <- 
+  ggplot(heart_attack_blood_pressure_by_sleep, aes(x = sleep_condition)) +
+        geom_bar(aes(y =  (..count..)/sum(..count..)), fill='cyan3') +
+        theme_linedraw() +
+        theme(axis.text.x = element_text(angle = 15, hjust = 1)) +
+        labs(x = "Sleep Condition", y = "Proportion")
+  
+  heart_attack_plot <- 
+  ggplot(heart_attack_blood_pressure_by_sleep, aes(x = heart_attack)) +
+        geom_bar(aes(y =  (..count..)/sum(..count..)),  fill='lightcoral') +
+        theme_linedraw() +
+        theme(axis.text.x = element_text(angle = 90, hjust = 2)) + 
+        labs(x = "Heart Attack", y = "Proportion")
+  
+  high_blood_pressure_plot <- 
+  ggplot(heart_attack_blood_pressure_by_sleep, aes(x = high_blood_pressure)) +
+        geom_bar(aes(y =  (..count..)/sum(..count..)),  fill='red') +
+        theme_linedraw() +
+        theme(axis.text.x = element_text(angle = 90, hjust = 2)) + 
+        labs(x = "High Blood Pressure", y = "Proportion")
+  
+  
+  
+  grid.arrange(sleep_condition_plot, heart_attack_plot, high_blood_pressure_plot, ncol=3) 
+```
+
+
+```{r}
+kable(table(heart_attack_blood_pressure_by_sleep$sleep_condition, heart_attack_blood_pressure_by_sleep$heart_attack))
+
+kable(table(heart_attack_blood_pressure_by_sleep$sleep_condition, heart_attack_blood_pressure_by_sleep$high_blood_pressure))
+```
+```{r}
+plot_heart_attack_by_sleep <- 
+  ggplot(data = heart_attack_blood_pressure_by_sleep) + 
+  aes(x = heart_attack, fill = sleep_condition) +
+  geom_bar(position = "fill") +
+  theme_linedraw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+               legend.position = "bottom")
+
+plot_high_blood_pressure_by_sleep <- 
+  ggplot(data = heart_attack_blood_pressure_by_sleep) + 
+  aes(x = high_blood_pressure, fill = sleep_condition) +
+  geom_bar(position = "fill") +
+  theme_linedraw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+               legend.position = "bottom") 
+  
+
+
+sleep_plots <- 
+  grid.arrange(plot_heart_attack_by_sleep, plot_high_blood_pressure_by_sleep, ncol=2)
+
+
+print(sleep_plots)
+```
+
+
+**Research quesion 3:**
+
+```{r}
+brfss2013 %>%
+  select(educa, income2) %>%
+  na.omit() ->
+  income_by_education
+
+  names(income_by_education) <- c("education_level", "income_category")
+
+  kable(head(income_by_education))
+```
+
+
+```{r, out.width='\\textwidth', fig.height = 8, fig.align='center'}
+
+plot_income_by_education <- 
+  ggplot(data = income_by_education) + 
+  aes(x = income_category, fill = education_level) +
+  geom_bar(position = "fill") +
+  theme_linedraw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+               legend.position = "bottom",
+               legend.direction = "vertical",
+               plot.title = element_text(size = 12, face = "bold"),
+               legend.title=element_text(size=8), 
+               legend.text=element_text(size=6),
+               legend.key.size = unit(0.3, "cm")) +
+  coord_fixed(ratio = 3) +
+  scale_fill_brewer(palette = 'RdYlGn') 
+
+
+print(plot_income_by_education)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

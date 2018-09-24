@@ -1,0 +1,8 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!"Exploring the BRFSS data.Rmd"
+!Exploring_the_BRFSS_data.html
+# etc...
