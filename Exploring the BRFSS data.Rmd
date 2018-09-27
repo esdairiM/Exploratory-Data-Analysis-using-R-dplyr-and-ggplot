@@ -298,13 +298,13 @@ we will calculate a new variable sleep_condition, that will contain sleep depriv
   mutate(sleep_condition = ifelse(sleptim1 < 7, "sleep deprived", "normal")) %>% 
   select(sleep_condition, cvdinfr4, X_rfhype5)->
   heart_attack_blood_pressure_by_sleep
-
+ 
+ print(dim(heart_attack_blood_pressure_by_sleep))
 
   names(heart_attack_blood_pressure_by_sleep) <- c("sleep_condition", "heart_attack", "high_blood_pressure")
   
   heart_attack_blood_pressure_by_sleep$high_blood_pressure <- fct_rev(heart_attack_blood_pressure_by_sleep$high_blood_pressure)
   
-  kable(head(heart_attack_blood_pressure_by_sleep))
 ```
 
 we will explore the partitions of the categories of all the 3 variables:
@@ -338,6 +338,10 @@ kable(high_blood_pressure_partitions)
 ```
 
 
+We can clearly see that 67.27% of the population get at least 7 hours of sleep in a 24h periode.
+also we can see that heart attack is a relatively rare disease since only about 5.91% of the population exhibit this condition, if we compare it to high bolld pressure we can see that for a random person, it is almost 4 times more likley to have high blood pressure that it is to have heart attack.
+
+we will plot those percentages on the same the scale to take a look and compare them:
 
 ```{r}
 sleep_condition_plot <- 
@@ -369,12 +373,38 @@ sleep_condition_plot <-
   grid.arrange(sleep_condition_plot, heart_attack_plot, high_blood_pressure_plot, ncol=3) 
 ```
 
+we can see that on the same scale there is a big difference in the partition of high blood pressure and heart attack.
+
+
+
+to explore the relation between those variables we will make contingency tables of heart attack in respect to sleep condition and then of high blood pressure in respect to sleep condition:
 
 ```{r}
-kable(table(heart_attack_blood_pressure_by_sleep$sleep_condition, heart_attack_blood_pressure_by_sleep$heart_attack))
 
-kable(table(heart_attack_blood_pressure_by_sleep$sleep_condition, heart_attack_blood_pressure_by_sleep$high_blood_pressure))
+rounded_prop_tables <- function(first_factor, second_factor)
+{
+  
+    round(prop.table(table(first_factor, second_factor))*100, 2)
+  
+}
+
+
+cat("Heart Attack:")
+heart_attack_cont_table <- rounded_prop_tables(heart_attack_blood_pressure_by_sleep$sleep_condition, heart_attack_blood_pressure_by_sleep$heart_attack)
+
+kable(heart_attack_cont_table)
+
+cat("\n")
+cat("\n")
+cat("High Blood Pressure:")
+high_blood_pressure_cont_table <- rounded_prop_tables(heart_attack_blood_pressure_by_sleep$sleep_condition, heart_attack_blood_pressure_by_sleep$high_blood_pressure)
+
+kable(high_blood_pressure_cont_table)
 ```
+
+we can't tell from those tables if there is any association between heart attack and high blood pressure, trying a visual representation may give us some clues about this association:
+
+
 ```{r}
 plot_heart_attack_by_sleep <- 
   ggplot(data = heart_attack_blood_pressure_by_sleep) + 
@@ -399,6 +429,39 @@ sleep_plots <-
 
 
 print(sleep_plots)
+```
+
+we can see that heart attack it is more likely for people who are sleep deprived and this is also the case for high blood pressure but we can see that this is a slight difference, it might as well be due to chance, so to test this we will do some simulations.
+
+
+```{r}
+heart_attack_simulation <-
+  as.factor(sample( c("Yes", "No"), 
+                    480818, 
+                    prob = c(0.0591, 0.9409), 
+                    replace = TRUE)) 
+
+sleep_condition_simulation <-
+  as.factor(sample( c("normal", "sleep deprived"), 
+                    480818, prob = c( 0.6727,  0.3273), 
+                    replace = TRUE)) 
+
+
+
+heart_attack_by_sleep_simulation <-
+  data.frame(
+    heart_attack = heart_attack_simulation[sample(length(heart_attack_simulation),
+                                                  length(heart_attack_simulation),
+                                                  replace = FALSE)
+                                           ],
+    sleep_condition = sleep_condition_simulation[sample(length(sleep_condition_simulation),
+                                                  length(sleep_condition_simulation),
+                                                  replace = FALSE)
+                                           ]
+    )
+
+head(heart_attack_by_sleep_simulation)
+
 ```
 
 
