@@ -406,24 +406,29 @@ we can't tell from those tables if there is any association between heart attack
 
 
 ```{r}
-plot_heart_attack_by_sleep <- 
-  ggplot(data = heart_attack_blood_pressure_by_sleep) + 
-  aes(x = heart_attack, fill = sleep_condition) +
-  geom_bar(position = "fill") +
-  theme_linedraw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-               legend.position = "bottom")
 
-plot_high_blood_pressure_by_sleep <- 
-  ggplot(data = heart_attack_blood_pressure_by_sleep) + 
-  aes(x = high_blood_pressure, fill = sleep_condition) +
-  geom_bar(position = "fill") +
-  theme_linedraw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-               legend.position = "bottom") 
+create_stacked_barplot <- function(data, x, fill ) {
+  
+    ggplot(data = data) + 
+    aes(x = get(x), fill = get(fill)) +
+    geom_bar(position = "fill") +
+    theme_linedraw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+                 legend.position = "bottom") +
+    labs(x = x, y = "Proportion") +
+    guides(fill=guide_legend(title=fill))
+  
+}
+
+
+plot_heart_attack_by_sleep <- 
+  create_stacked_barplot(heart_attack_blood_pressure_by_sleep, "heart_attack", "sleep_condition") 
   
 
-
+plot_high_blood_pressure_by_sleep <- 
+  create_stacked_barplot(heart_attack_blood_pressure_by_sleep, "high_blood_pressure", "sleep_condition") 
+  
+ 
 sleep_plots <- 
   grid.arrange(plot_heart_attack_by_sleep, plot_high_blood_pressure_by_sleep, ncol=2)
 
@@ -434,35 +439,118 @@ print(sleep_plots)
 we can see that heart attack it is more likely for people who are sleep deprived and this is also the case for high blood pressure but we can see that this is a slight difference, it might as well be due to chance, so to test this we will do some simulations.
 
 
+
+
+This code will generate a random dataset based on the percentages of each category, and we will examine how this compares to our data, this is the code 
 ```{r}
-heart_attack_simulation <-
-  as.factor(sample( c("Yes", "No"), 
-                    480818, 
-                    prob = c(0.0591, 0.9409), 
-                    replace = TRUE)) 
-
-sleep_condition_simulation <-
-  as.factor(sample( c("normal", "sleep deprived"), 
-                    480818, prob = c( 0.6727,  0.3273), 
-                    replace = TRUE)) 
 
 
+create_factor_simulation <- function(size, first_factor, first_prob, second_factor, second_prob, replace) {
+  
+  
+    as.factor(sample( c(first_factor, second_factor), 
+                      size, prob = c(first_prob,  second_prob), 
+                      replace = replace)) 
+  
+}
 
-heart_attack_by_sleep_simulation <-
-  data.frame(
+
+concatenate_simulations <- function(simulation_arguments) {
+  
+   replace_simulation = TRUE
+   replace_concatenation  = FALSE
+  
+   sleep_condition_simulation <- 
+     create_factor_simulation(simulation_arguments[["sleep_condition", "sim_size"]], 
+                              simulation_arguments[["sleep_condition", "first_factor"]], 
+                              simulation_arguments[["sleep_condition", "first_prob"]],
+                              simulation_arguments[["sleep_condition", "second_factor"]], 
+                              simulation_arguments[["sleep_condition", "second_prob"]],
+                              replace_simulation)
+   
+   heart_attack_simulation <- 
+    create_factor_simulation(simulation_arguments[["heart_attack", "sim_size"]], 
+                              simulation_arguments[["heart_attack", "first_factor"]], 
+                              simulation_arguments[["heart_attack", "first_prob"]],
+                              simulation_arguments[["heart_attack", "second_factor"]], 
+                              simulation_arguments[["heart_attack", "second_prob"]],
+                              replace_simulation)
+   
+    high_blood_pressure_simulation <- 
+     create_factor_simulation(simulation_arguments[["high_blood_pressure", "sim_size"]], 
+                              simulation_arguments[["high_blood_pressure", "first_factor"]], 
+                              simulation_arguments[["high_blood_pressure", "first_prob"]],
+                              simulation_arguments[["high_blood_pressure", "second_factor"]], 
+                              simulation_arguments[["high_blood_pressure", "second_prob"]],
+                              replace_simulation)
+    data.frame(
+      
+     sleep_condition = sleep_condition_simulation[sample(length(sleep_condition_simulation),
+                                                  length(sleep_condition_simulation),
+                                                  replace = replace_concatenation)
+                                           ],  
+      
+      
+      
     heart_attack = heart_attack_simulation[sample(length(heart_attack_simulation),
                                                   length(heart_attack_simulation),
-                                                  replace = FALSE)
+                                                  replace = replace_concatenation)
                                            ],
-    sleep_condition = sleep_condition_simulation[sample(length(sleep_condition_simulation),
-                                                  length(sleep_condition_simulation),
-                                                  replace = FALSE)
+    
+    high_blood_pressure = high_blood_pressure_simulation[sample(length(high_blood_pressure_simulation),
+                                                  length(high_blood_pressure_simulation),
+                                                  replace = replace_concatenation)
                                            ]
+   
     )
+  
+}
 
-head(heart_attack_by_sleep_simulation)
+
+
+ simulation_arguments <- t( data.frame(
+
+     c(480818, "normal", 0.6727, "sleep deprived", 0.3273),
+      c(480818, "Yes", 0.0591, "No", 0.9409),
+      c(480818, "Yes",  0.4022,  "No", 0.5978)
+    ))
+
+ colnames(simulation_arguments) <- c("sim_size", "first_factor", "first_prob", "second_factor", "second_prob")
+ row.names(simulation_arguments) <-c("sleep_condition", "heart_attack", "high_blood_pressure") 
+```
+
+
+
+
+
+```{r}
+
+simulated_heart_attack_blood_pressure_by_sleep <- concatenate_simulations(simulation_arguments) 
+
+plot_heart_attack_by_sleep <- 
+  create_stacked_barplot(simulated_heart_attack_blood_pressure_by_sleep, "heart_attack", "sleep_condition") 
+  
+
+plot_high_blood_pressure_by_sleep <- 
+  create_stacked_barplot(simulated_heart_attack_blood_pressure_by_sleep, "high_blood_pressure", "sleep_condition") 
+  
+ 
+sleep_plots <- 
+  grid.arrange(plot_heart_attack_by_sleep, plot_high_blood_pressure_by_sleep, ncol=2)
 
 ```
+
+
+
+```{r}
+
+
+
+
+
+```
+
+
 
 
 **Research quesion 3:**
