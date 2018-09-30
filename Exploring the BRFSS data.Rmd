@@ -441,7 +441,7 @@ we can see that heart attack it is more likely for people who are sleep deprived
 
 
 
-This code will generate a random dataset based on the percentages of each category, and we will examine how this compares to our data, this is the code 
+This code will generate a random dataset based on the percentages of each category, and we will examine how this compares to our data, to this generated from the underline distribution and see if the difference that we noticed in the previous section is due to chance or if it is related to the amount of sleep that a person gets.
 ```{r}
 
 
@@ -520,8 +520,7 @@ concatenate_simulations <- function(simulation_arguments) {
 ```
 
 
-
-
+Lets generate some data and plot it to make it easier to see if there is any difference:
 
 ```{r}
 
@@ -540,16 +539,9 @@ sleep_plots <-
 
 ```
 
+we can generate random data as many times as we want, but this does not show any difference between heart  attack and blood pressure percentages for people who have enough sleep and those who are sleep deprived, so the difference that exhibits the original data can NOT be due to chance.
 
-
-```{r}
-
-
-
-
-
-```
-
+From all those analyses we can conclude both heart attack and high blood pressure have an association with weather or not a person gets enough sleep, this just an association to infer causation we need to conduct further experiments with control and treatement groups and random assignemnts.
 
 
 
