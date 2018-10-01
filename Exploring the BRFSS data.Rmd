@@ -11,7 +11,8 @@ output:
 
 ### Load packages
 
-```{r load-packages, message = FALSE}
+```{r load-packages, message = FALSE, warning=FALSE}
+## if you don't have forcats installed uncomment the following line:
 #install.packages("forcats")
 
 library(dplyr)
@@ -23,7 +24,7 @@ library(forcats)
 
 ### Load data
 
- 
+First we load the data set and see the dimensions:
 ```{r load-data}
 load("brfss2013.RData")
 dim(brfss2013)
@@ -34,32 +35,32 @@ dim(brfss2013)
 * * *
 
 ## Part 1: Data
-The data for the project was collected by The Behavioral Risk Factor Surveillance System, the project collects data relative to some health practices and risk behaviors that are linked to chronic diseases, injuries, and preventable infectious diseases that affect the adult (aged 18 yers and more), non-institutionalized (people that were not at a hostpital at the time of the interview) population, the data was collected by two main types of interviews: landline and cellular telephone, for the landline iterview it selects a random adult from the houshold.
+The data for the project was collected by The Behavioral Risk Factor Surveillance System, the project collects data relative to some health practices and risk behaviors that are linked to chronic diseases, injuries, and preventable infectious diseases that affect the adult (aged 18 years and more), non-institutionalized (people that were not at a hospital at the time of the interview) population, the data was collected by two main types of interviews: landline and cellular telephone, for the landline interview it selects a random adult from the household.
 
-the information on the site of the project does not specify how a non response to interview is treated, also since this is a phone interview it is subject ot multiple errors:
+the information on the site of the project does not specify how a non response to interview is treated, also since this is a phone interview it is subject to multiple errors:
 
-* wheather or not the respondant is telling the truth, especially, and wheather or not he recalls facts about his health problems and behaviours.
+* whether or not the respondent is telling the truth, especially, and whether or not he recalls facts about his health problems and behaviors.
 * the exact phrasing of the question might affect the response in a certain way.
 * entry errors by the person asking the questions.
 
-Considering all this factors, and given that the BRFSS has the resources needed to eleminat a lot of errors we can draw the following conclusion:
+Considering all this factors, and given that the BRFSS has the resources needed to eliminate a lot of errors we can draw the following conclusion:
 
 * The study relies on random sampling, the exact method used is Random Digit Dialing as it says on the BRFSS FAQ page: https://www.cdc.gov/brfss/about/brfss_faq.htm,
-so we can generalize the results to: adult (aged 18 or plus) non-instutionalized US residents.
+so we can generalize the results to: adult (aged 18 or plus) non-institutionalized US residents.
 
-* There is no random assignement so this is an observational study, so: we can only infer ASSOCIATION and NOT CAUSATION.
+* There is no random assignment so this is an observational study, so: we can only infer ASSOCIATION and NOT CAUSATION.
 
 * * *
 
 ## Part 2: Research questions
 
-As a college student, in my analysis I will try to explore the associations that exist between some of the thing I care about like some life habits (exercise, diet and sleep) and how they relate to some helth problems (overweight, blood presure and diabities) also one of the most important issues is how can education level be associated with income level.
+As a college student, in my analysis I will try to explore the associations that exist between some of the thing I care about like some life habits (exercise, diet and sleep) and how they relate to some health problems (overweight,high blood pressure and heart attack) also one of the most important issues is how can education level be associated with income level.
 
 **Research quesion 1:**
-Some studies suggest that exercise and healty food consumption(espeacially fruit and vegetables) help to prevent overweight, how can we describe the associations between physical activity and overweight, and between healty food consumption and overweight?
+Some studies suggest that exercise and healthy food consumption(especially fruit and vegetables) help to prevent overweight, how can we describe the associations between physical activity and overweight, and between healthy food consumption and overweight?
 
 **Research quesion 2:**
-Sleep is essential to humans, and most studies say that 7 to 9 hours is the correct amount of sleep that every one should get. It is common to link sleep deprivation to some health problems such an increasing risk of diabities and high blood presure, so is there any association between sleep deprivation (less than 7h) and high blood presure and also diabities?
+Sleep is essential to humans, and most studies say that 7 to 9 hours is the correct amount of sleep that every one should get. It is common to link sleep deprivation to some health problems such an increasing risk of heart attack and high blood pressure, so is there any association between sleep deprivation (less than 7h) and high blood pressure and also heart attack?
 
 **Research quesion 3:**
 How does education level associate with income level?
@@ -117,7 +118,7 @@ most observations fall under Overweight followed by Normal weight then Obese and
 
 
 Now we will prepare the data to plot the variables in respect to each other, let us start by preparing the data:
-lets group the data by the activity_category and  then by weight_category and take the counts under each category and sub-category, we will achieve that using the folowing chunk of code:
+lets group the data by the activity_category and  then by weight_category and take the counts under each category and sub-category, we will achieve that using the following chunk of code:
 
 ```{r}
   weight_by_activity %>%
@@ -129,7 +130,7 @@ lets group the data by the activity_category and  then by weight_category and ta
   weight_by_activity_type_data
 ```
 
-we will take the proportion of each sub-category in respect ot each parent category using this command:
+we will take the proportion of each sub-category in respect to each parent category using this command:
 
 ```{r}
 weight_by_activity_type_data$weight_activity_ratio <-
@@ -157,12 +158,12 @@ As we can see in this plot the physical activity is associated with the weight c
 
 
 
-Now we will see how both fruit and vegetable cosumption affect the BMI(body mass index), we will add some new variables to analysis, we are talking here about:
-X_bmi5: Computed Body Mass Index this is a numerical continous variable
-X_vegesum: Total Vegetables Consumed Per Day this is a numerical continous variable
-X_frutsum: Total Fruits Consumed Per Day this is a numerical continous variable
+Now we will see how both fruit and vegetable consumption affect the BMI(body mass index), we will add some new variables to analysis, we are talking here about:
+X_bmi5: Computed Body Mass Index this is a numerical continuous variable
+X_vegesum: Total Vegetables Consumed Per Day this is a numerical continuous variable
+X_frutsum: Total Fruits Consumed Per Day this is a numerical continuous variable
 
-we will also keep the other variables: X_pacat1, X_bmi5cat so we can later combine the result and see how the combination of varibles related to healty food and physical activity affect boody weight, we will start by extracting the relevent variables and applyig some transformation and calculating some new variables:
+we will also keep the other variables: X_pacat1, X_bmi5cat so we can later combine the result and see how the combination of variables related to healthy food and physical activity affect body weight, we will start by extracting the relevant variables and applying some transformation and calculating some new variables:
 ```{r}
   brfss2013 %>%
   select(X_frutsum, X_vegesum, X_pacat1, X_bmi5, X_bmi5cat) %>%
@@ -233,7 +234,7 @@ evalutate_bmi_and_frut_veg_distributions <- function(weight_by_healthy_food_and_
   data_dist_histogam_plots <- 
     grid.arrange(BMI_hsitogram, frut_veg_consum_histogram, ncol=2) 
   
-  print(data_dist_histogam_plots)
+ data_dist_histogam_plots
 }
 
 evalutate_bmi_and_frut_veg_distributions(weight_by_healthy_food_and_activity)
@@ -256,7 +257,7 @@ We will plot the BMI against the fruit and vegetable consumption, to see if ther
 
 ```
 
-we can see that as the consumption of vegeatbles and fruits increases the number of observations that exhibit obesity and underweight decreases and the BMI tends to go in the direction of a healthy BMI, but other than this somewhat unstable association we can't conclude anything else about the association, so we will try to understand how both variables:
+we can see that as the consumption of vegetables and fruits increases the number of observations that exhibit obesity and underweight decreases and the BMI tends to go in the direction of a healthy BMI, but other than this somewhat unstable association we can't conclude anything else about the association, so we will try to understand how both variables:
 fruit/vegetable consumption and physical activity affect the BMI and BMI category.
 
 so let us create a plot that the 4 variables:
@@ -270,28 +271,27 @@ ggplot(data=weight_by_healthy_food_and_activity, aes(x=total_frut_veg_cons, y=BM
   facet_wrap(~actv_category)
 ```
 
-It is clear that for all people who are at least Insufficiently active, as the fruit and vegetable consumption increase the BMI tends to go towrds the interval $[18.5 \ ; \ 25]$ which is the normal weight interval, and also that the observations that show obesity and overweight tends to shrink with the increase of vegetable and fruit consumption.
-In the other hand for people who are Inactive eventhough the increase of healty food (veg and fruit) tends to make the BMI go twords the normal weight interval some ovservations still exhibit obesity and overweight for high levels of healty food consumption.
+It is clear that for all people who are at least Insufficiently active, as the fruit and vegetable consumption increase the BMI tends to go towards the interval $[18.5 \ ; \ 25]$ which is the normal weight interval, and also that the observations that show obesity and overweight tends to shrink with the increase of vegetable and fruit consumption.
+In the other hand for people who are Inactive even though the increase of healthy food (veg and fruit) tends to make the BMI go towards the normal weight interval some observations still exhibit obesity and overweight for high levels of healthy food consumption.
 
 
 
-conclusion:
-
-To answer the First question we can safly say that there is a strong association between physical activity and body weight on one hand, also there is a somewhat weak association between healthy food cosumption and body weight.
+*conclusion:*
+To answer the First question we can safely say that there is a strong association between physical activity and body weight on one hand, also there is a somewhat weak association between healthy food consumption and body weight.
 But the strongest association is between (physical activity + healthy food consumption) and body weight.
 We can't infer any causal connection since this is not an experiment and there is no control and treatment groups.
 
 **Research quesion 2:**
 
 Now we will if sleep is associated to heart attack and high blood pressure, we will use the following variables:
-sleptim1: How Much Time Do You Sleep, this is a numerical continous variable that indicates the average amount of time a person get in a 24h time periode.
-cvdinfr4: Ever Diagnosed With Heart Attack, this is a categorical variable that idicates whether or not a person has ever been diagnosed with heart attack.
+sleptim1: How Much Time Do You Sleep, this is a numerical continuous variable that indicates the average amount of time a person get in a 24h time period.
+cvdinfr4: Ever Diagnosed With Heart Attack, this is a categorical variable that indicates whether or not a person has ever been diagnosed with heart attack.
 X_rfhype5: High Blood Pressure Calculated Variable, this is a categorical variable that indicates if the person has ever been told he has high blood pressure by any health professional.
 
 we will calculate a new variable sleep_condition, that will contain sleep deprived if sleptim1 is less than 7 hours and normal otherwise normal.
 
 
-```{r}
+```{r, message = FALSE, warning=FALSE}
 
  brfss2013 %>%
   select(sleptim1, cvdinfr4, X_rfhype5) %>%
@@ -300,8 +300,6 @@ we will calculate a new variable sleep_condition, that will contain sleep depriv
   select(sleep_condition, cvdinfr4, X_rfhype5)->
   heart_attack_blood_pressure_by_sleep
  
- print(dim(heart_attack_blood_pressure_by_sleep))
-
   names(heart_attack_blood_pressure_by_sleep) <- c("sleep_condition", "heart_attack", "high_blood_pressure")
   
   heart_attack_blood_pressure_by_sleep$high_blood_pressure <- fct_rev(heart_attack_blood_pressure_by_sleep$high_blood_pressure)
@@ -339,8 +337,8 @@ kable(high_blood_pressure_partitions)
 ```
 
 
-We can clearly see that 67.27% of the population get at least 7 hours of sleep in a 24h periode.
-also we can see that heart attack is a relatively rare disease since only about 5.91% of the population exhibit this condition, if we compare it to high bolld pressure we can see that for a random person, it is almost 4 times more likley to have high blood pressure that it is to have heart attack.
+We can clearly see that 67.27% of the population get at least 7 hours of sleep in a 24h period.
+also we can see that heart attack is a relatively rare disease since only about 5.91% of the population exhibit this condition, if we compare it to high Blood pressure we can see that for a random person, it is almost 4 times more likely to have high blood pressure that it is to have heart attack.
 
 we will plot those percentages on the same the scale to take a look and compare them:
 
@@ -389,19 +387,23 @@ rounded_prop_tables <- function(first_factor, second_factor)
   
 }
 
-
-cat("Heart Attack:")
+```
+Heart Attack:
+```{r}
 heart_attack_cont_table <- rounded_prop_tables(heart_attack_blood_pressure_by_sleep$sleep_condition, heart_attack_blood_pressure_by_sleep$heart_attack)
 
 kable(heart_attack_cont_table)
+```
 
-cat("\n")
-cat("\n")
-cat("High Blood Pressure:")
+
+High Blood Pressure:
+```{r}
 high_blood_pressure_cont_table <- rounded_prop_tables(heart_attack_blood_pressure_by_sleep$sleep_condition, heart_attack_blood_pressure_by_sleep$high_blood_pressure)
 
 kable(high_blood_pressure_cont_table)
 ```
+
+
 
 we can't tell from those tables if there is any association between heart attack and high blood pressure, trying a visual representation may give us some clues about this association:
 
@@ -440,7 +442,7 @@ we can see that heart attack it is more likely for people who are sleep deprived
 
 
 
-This code will generate a random dataset based on the percentages of each category, and we will examine how this compares to our data, to this generated from the underline distribution and see if the difference that we noticed in the previous section is due to chance or if it is related to the amount of sleep that a person gets.
+This code will generate a random data set based on the percentages of each category, and we will examine how this compares to our data, to this generated from the underline distribution and see if the difference that we noticed in the previous section is due to chance or if it is related to the amount of sleep that a person gets.
 ```{r}
 
 
@@ -540,14 +542,15 @@ sleep_plots <-
 
 we can generate random data as many times as we want, but this does not show any difference between heart  attack and blood pressure percentages for people who have enough sleep and those who are sleep deprived, so the difference that exhibits the original data can NOT be due to chance.
 
-From all those analyses we can conclude both heart attack and high blood pressure have an association with weather or not a person gets enough sleep, this just an association to infer causation we need to conduct further experiments with control and treatement groups and random assignemnts.
+*conclusion:*
+From all those analyses we can conclude both heart attack and high blood pressure have an association with weather or not a person gets enough sleep, this just an ASSOCIATION, to infer causation we need to conduct further experiments with control and treatment groups and random assignment.
 
 
 
 **Research quesion 3:**
 
 
-Now we will see if there is any association between education level and income level, we will use a set of two categrical variables:
+Now we will see if there is any association between education level and income level, we will use a set of two categorical variables:
 educa: Education Level
 income2: Income Level
 
@@ -573,7 +576,7 @@ we will take a look at the proportions of the variables and how the observations
  
 ```
 
-we can see that there are 6 categroies in education level variable
+we can see that there are 6 categories in education level variable, and we can see clearly that the majority (more than 80%) of people in the data set have at least graduated high school.
 
 
 ```{r, out.width='\\textwidth', fig.height = 5, fig.align='center'}
@@ -582,7 +585,9 @@ we can see that there are 6 categroies in education level variable
 
 ```
 
+The income level is comprised of 8 categories, and we can notice that most observations in the population: more than 60% have an income that exceeds 25k$.
 
+Now that we have an idea about the structure of the variables that we'll be using in our analysis, let's plot them against each other and see what relationship will present itself:
 
 ```{r, out.width='\\textwidth', fig.height = 8, fig.align='center'}
 
@@ -608,8 +613,10 @@ print(plot_income_by_education)
 ```
 
 
+in the previous plot we can see that as we move up in income levels the percentages of people with higher levels of education tends to grow, and those with education level less than high school diploma tends to shrink, the percentages of people who have attended college for less than 4 years is pretty much constant across all income levels except for income above 75k$ where it shrinks a little.
 
-
+*conclusion:*
+so we can observe a positive association between Income level and Education level in the data and we can generalize this to the population of interest because this is a random sample, causation can NOT be inferred since this is an observational study.
 
 
 
