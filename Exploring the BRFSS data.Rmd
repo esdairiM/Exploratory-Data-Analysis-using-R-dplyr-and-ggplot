@@ -88,22 +88,23 @@ brfss2013 %>%
 
   names(weight_by_activity) <- c("activity_category", "weight_category") 
   
-  activity_plot <- 
-  ggplot(weight_by_activity, aes(x = `activity_category`)) +
-        geom_bar(aes(y =  (..count..)/sum(..count..)), fill='cyan3') +
+  create_partition_barplot <- function(data, x, fill_color, label_angle) {
+    ggplot(data = data, aes(x = get(x))) +
+        geom_bar(aes(y =  (..count..)/sum(..count..)), fill = fill_color) +
         theme_linedraw() +
-        theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
-        labs(x = "Physical Activity Categories", y = "Proportion")
+        theme(axis.text.x = element_text(angle = label_angle, hjust = 1)) +
+        labs(x = x, y = "Proportion")
+  }
+  
+  
+  activity_plot <- 
+    create_partition_barplot(weight_by_activity, "activity_category", "cyan3", 30)
+
   
   body_mass_index_plot <- 
-  ggplot(weight_by_activity, aes(x = `weight_category`)) +
-        geom_bar(aes(y =  (..count..)/sum(..count..)),  fill='lightcoral') +
-        theme_linedraw() +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-        labs(x = "Computed Body Mass Index Categories", y = "Proportion")
-        
-  
-  weight_activity_plot <- 
+    create_partition_barplot(weight_by_activity, "weight_category", "lightcoral", 30)
+    
+ 
   grid.arrange(activity_plot, body_mass_index_plot, ncol=2) 
 
   
@@ -429,11 +430,9 @@ plot_high_blood_pressure_by_sleep <-
   create_stacked_barplot(heart_attack_blood_pressure_by_sleep, "high_blood_pressure", "sleep_condition") 
   
  
-sleep_plots <- 
-  grid.arrange(plot_heart_attack_by_sleep, plot_high_blood_pressure_by_sleep, ncol=2)
+ 
+grid.arrange(plot_heart_attack_by_sleep, plot_high_blood_pressure_by_sleep, ncol=2)
 
-
-print(sleep_plots)
 ```
 
 we can see that heart attack it is more likely for people who are sleep deprived and this is also the case for high blood pressure but we can see that this is a slight difference, it might as well be due to chance, so to test this we will do some simulations.
@@ -547,6 +546,13 @@ From all those analyses we can conclude both heart attack and high blood pressur
 
 **Research quesion 3:**
 
+
+Now we will see if there is any association between education level and income level, we will use a set of two categrical variables:
+educa: Education Level
+income2: Income Level
+
+Let's first extract the data that we will work with and remove all the missing values:
+
 ```{r}
 brfss2013 %>%
   select(educa, income2) %>%
@@ -554,9 +560,28 @@ brfss2013 %>%
   income_by_education
 
   names(income_by_education) <- c("education_level", "income_category")
-
-  kable(head(income_by_education))
 ```
+
+
+we will take a look at the proportions of the variables and how the observations span over each of the categories:
+
+
+
+```{r, out.width='\\textwidth', fig.height = 6, fig.align='center'}
+
+  create_partition_barplot(income_by_education, "education_level", "cyan3", 65)
+ 
+```
+
+we can see that there are 6 categroies in education level variable
+
+
+```{r, out.width='\\textwidth', fig.height = 5, fig.align='center'}
+    
+  create_partition_barplot(income_by_education, "income_category", "lightcoral", 90)
+
+```
+
 
 
 ```{r, out.width='\\textwidth', fig.height = 8, fig.align='center'}
